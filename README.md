@@ -8,13 +8,15 @@ Phing Build Script for CakePHP projects
 
 ## Setup
 
-Install Phing (http://www.phing.info/trac/wiki/Users/Installation)
-Drop into your Cake root directory (same level as app)
-Javascript and CSS and files should be included in the layout (ie: View/Layouts/default.ctp) like this:
+* Install Phing (http://www.phing.info/trac/wiki/Users/Installation)
+* Drop into your Cake root directory (same level as app)
+* Javascript and CSS and files should be included in the layout (ie: View/Layouts/default.ctp) like this:
 
     <?php
     $build_css = array('styles.css', 'bootstrap/bootstrap.css', 'bootstrap/bootstrap-responsive.css');
 	echo $this->Html->css($build_css);
-	$build_js = array('common.js', 'custom.js');
+	$build_js = array('custom.js');
 	echo $this->Html->script($build_js);
 	?>
+
+* Update build.properties with your css and js filenames
