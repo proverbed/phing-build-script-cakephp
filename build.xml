@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<project name="default" default="main">
+
+	<property file="build.properties"/>
+	<property name="build.cssPath" value="${build.dir}/${base.css.path}"/>
+	<property name="build.jsPath" value="${build.dir}/${base.js.path}"/>
+
+	<!--Delete any previous Publish directory to start from scratch -->
+	<target name="build.delete">
+		<delete dir="${build.dir}"/>
+	</target>
+
+	<!--Create the Build Directory -->
+	<target name="build.createDir">
+		<mkdir dir="${build.dir}"/>
+	</target>
+
+	<!-- Copies the files in the app directory to the publish, excluding tmp, Console, and Test -->
+	<target name="copy.all">
+		<copy todir="${build.dir}">
+			<fileset dir="${app.dir}">
+				<exclude name="Test/**"/>
+				<exclude name="Console/**"/>
+				<exclude name="tmp/**"/>
+				<exclude name="${base.css.path}"/>
+				<exclude name="${base.js.path}"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- Minifies the javascript and CSS files defined in the build properties -->
+	<target name="minify.loop">
+		<foreach param="filename" absparam="absfilename" target="minify.file">
+			<fileset dir="${build.jsPath}" includes="${js.concat.min}" />
+			<fileset dir="${build.cssPath}" includes="${css.concat.min}" />
+		</foreach>
+	</target>
+
+	<target name="minify.file">
+		<exec command="java -jar yuicompressor-2.4.5.jar ${absfilename} -o ${absfilename}"/>
+	</target>
+
+	<!-- Concatenate JS -->
+	<target name="js.concat">
+		<echo msg="Concatenating JavaScript files." />
+		<mkdir dir="${build.jsPath}" />
+		<append destfile="${build.jsPath}/${js.concat.min}">
+			<filelist dir="${app.dir}/${base.js.path}" files="${js.linkPaths}" />
+		</append>
+	</target>
+
+	<!-- Concatenate CSS -->
+	<target name="css.concat">
+		<echo msg="Concatenating CSS files." />
+		<mkdir dir="${build.cssPath}" />
+		<append destfile="${build.cssPath}/${css.concat.min}">
+			<filelist dir="${app.dir}/${base.css.path}" files="${css.linkPaths}" />
+		</append>
+	</target>
+
+	<!-- Compresses html -->
+	<target name="html.minifyLoop">
+		<foreach param="filename" absparam="absfilename" target="html.minify">
+			<fileset dir="${build.dir}" includes="View/**/*.ctp" />
+		</foreach>
+	</target>
+
+	<target name="html.minify">
+		<exec command="java -jar htmlcompressor-1.4.3.jar ${absfilename} -o ${absfilename}"/>
+	</target>
+
+	<!-- Turns off debug mode in Config/core.php -->
+	<target name="debug.mode">
+		<echo message="turning off debug mode" />
+		<reflexive>
+			<fileset dir="${build.dir}/Config/" includes="core.php" />
+			<filterchain>
+				<replaceregexp>
+					<regexp pattern="Configure::write\(\'debug\'.+;" replace="Configure::write('debug', 0);"/>
+				</replaceregexp>
+			</filterchain>
+		</reflexive>
+	</target>
+
+	<!-- Replaces links in the layout with new processed ones. -->
+	<target name="assets.update">
+		<echo message="replacing old script links with new concatinated one" />
+		<reflexive>
+			<fileset dir="${build.dir}" includes="View/**/*.ctp" />
+			<filterchain>
+				<replaceregexp>
+					<regexp pattern="\$build_css\s*\=[\s\S]+?\;" replace="$build_css = '${css.concat.min}';"/>
+					<regexp pattern="\$build_js\s*\=[\s\S]+?\;" replace="$build_js = '${js.concat.min}';"/>
+				</replaceregexp>
+			</filterchain>
+		</reflexive>
+	</target>
+
+	<!-- The secret sauce -->
+	<target name="main" depends="build.delete, build.createDir, copy.all, js.concat, css.concat, minify.loop, assets.update, debug.mode">
+	</target>	
+</project>
