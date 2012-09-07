@@ -82,21 +82,7 @@
 		</reflexive>
 	</target>
 
-	<!-- Replaces links in the layout with new processed ones. -->
-	<target name="assets.update">
-		<echo message="replacing old script links with new concatinated one" />
-		<reflexive>
-			<fileset dir="${build.dir}" includes="View/**/*.ctp" />
-			<filterchain>
-				<replaceregexp>
-					<regexp pattern="\$build_css\s*\=[\s\S]+?\;" replace="$build_css = '${css.concat.min}';"/>
-					<regexp pattern="\$build_js\s*\=[\s\S]+?\;" replace="$build_js = '${js.concat.min}';"/>
-				</replaceregexp>
-			</filterchain>
-		</reflexive>
-	</target>
-
 	<!-- The secret sauce -->
-	<target name="main" depends="build.delete, build.createDir, copy.all, js.concat, css.concat, minify.loop, assets.update, debug.mode">
+	<target name="main" depends="build.delete, build.createDir, copy.all, js.concat, css.concat, minify.loop, debug.mode">
 	</target>	
 </project>
